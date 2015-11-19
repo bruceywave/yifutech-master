@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans   
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context.xsd">
+		
+	<!-- 扫描配置文件 -->
+	<context:property-placeholder location="classpath:applications.properties"/>
+	<!-- 配置数据源 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="username" value="${connection.username}"/>
+		<property name="password" value="${connection.password}"/>
+		<property name="url" value="${connection.url}"/>
+		<property name="driverClassName" value="${connection.driverClassName}"/>
+		<!-- <property name="initialSize" value="${connection.initialSize}"></property> -->
+		<property name="maxActive" value="${connection.maxActive}"/>
+		<property name="maxIdle" value="${connection.maxIdle}"/>
+		<property name="minIdle" value="${connection.minIdle}"/>
+		<property name="maxWait" value="${connection.maxWait}"/>
+		<property name="removeAbandoned" value="${connection.removeAbandoned}"/>
+		<property name="removeAbandonedTimeout" value="${connection.removeAbandonedTimeout}"/>
+		<property name="logAbandoned" value="${connection.logAbandoned}"/>
+	</bean>
+	<!-- 配置sessionFactory -->
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<!-- 数据源 -->
+		<property name="dataSource" ref="dataSource"/>
+		<!-- 扫描包 -->
+		<property name="packagesToScan">
+			<list>
+				<value>com.yifutech.sys</value>
+			</list>
+		</property>
+		<!-- hibernate属性配置 -->
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+				<prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+				<prop key="hibernate.connection.autocommit">${hibernate.connection.autocommit}</prop>
+			</props>
+		</property>
+	</bean>
+	<!-- 事务管理 -->
+	<bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+	<!-- 配置事务代理 -->
+	<bean id="transcationProxy" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean" abstract="true">
+		<property name="transactionManager" ref="transactionManager"/>
+		<property name="transactionAttributes">
+			<props>
+				<prop key="add*">PROPAGATION_REQUIRED,-Exception</prop>
+				<prop key="save*">PROPAGATION_REQUIRED,-Exception</prop>
+	            <prop key="modify*">PROPAGATION_REQUIRED,-myException</prop>
+	            <prop key="update*">PROPAGATION_REQUIRED,-myException</prop>
+	            <prop key="del*">PROPAGATION_REQUIRED</prop>
+	            <prop key="query*">PROPAGATION_REQUIRED,readOnly</prop>
+	            <prop key="get*">PROPAGATION_REQUIRED,readOnly</prop>
+	            <prop key="find*">PROPAGATION_REQUIRED,readOnly</prop>
+	            <prop key="*">PROPAGATION_REQUIRED</prop>
+			</props>
+		</property>
+	</bean>
+</beans>
